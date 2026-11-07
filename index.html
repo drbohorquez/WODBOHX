@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-neutral-950 text-neutral-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOD Coach Calendar | Hyrox & CrossFit</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sand: {
+                            50: '#fdfbf7',
+                            100: '#f5efe6',
+                            200: '#e8dcce',
+                            300: '#d9c4ab',
+                            400: '#c5a580',
+                            500: '#b08b5f',
+                            600: '#9b734b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #404040;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans antialiased bg-[#0a0a0a] text-neutral-200 pb-12">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-30 bg-[#121212]/95 backdrop-blur border-b border-neutral-800">
+        <div class="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-neutral-900 border border-neutral-800 rounded-xl shadow-md">
+                    <i data-lucide="dumbbell" class="w-6 h-6 text-sand-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-tight text-neutral-100">
+                        PULSE <span class="text-sand-400">COACH</span>
+                    </h1>
+                    <p class="text-[11px] text-neutral-400 font-medium tracking-wide">CALENDARIO DE CLASES & WODS</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="openTimerModal()" class="px-3 py-2 text-xs font-semibold rounded-xl border border-sand-500/40 bg-sand-500/20 text-sand-300 hover:bg-sand-500/30 transition flex items-center space-x-1.5 shadow-sm">
+                    <i data-lucide="timer" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Cronómetro WOD</span>
+                </button>
+                <button onclick="switchView('list')" id="btnViewList" class="px-3 py-2 text-xs font-semibold rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:text-white transition flex items-center space-x-1.5">
+                    <i data-lucide="layout-list" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Listado</span>
+                </button>
+                <button onclick="switchView('calendar')" id="btnViewCalendar" class="px-3 py-2 text-xs font-semibold rounded-xl border border-sand-500/40 bg-sand-500/10 text-sand-300 transition flex items-center space-x-1.5">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Calendario Clases</span>
+                </button>
+                <button onclick="openWodModal()" class="flex items-center space-x-1.5 bg-sand-500 hover:bg-sand-400 text-neutral-950 font-bold px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95 text-xs">
+                    <i data-lucide="plus-circle" class="w-4 h-4 stroke-[2.5]"></i>
+                    <span>Programar WOD</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 pt-6 flex-1 w-full space-y-6">
+
+        <!-- Quick Stats Cards -->
+        <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-[#121212] border border-neutral-800/80 p-4 rounded-2xl relative overflow-hidden">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">WODs Programados</p>
+                <p id="statTotalWods" class="text-2xl sm:text-3xl font-extrabold text-neutral-100 mt-1">0</p>
+            </div>
+            <div class="bg-[#121212] border border-neutral-800/80 p-4 rounded-2xl relative overflow-hidden">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Hyrox Clases</p>
+                <p id="statHyroxWods" class="text-2xl sm:text-3xl font-extrabold text-sand-300 mt-1">0</p>
+            </div>
+            <div class="bg-[#121212] border border-neutral-800/80 p-4 rounded-2xl relative overflow-hidden">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">CrossFit Clases</p>
+                <p id="statCrossfitWods" class="text-2xl sm:text-3xl font-extrabold text-white mt-1">0</p>
+            </div>
+            <div class="bg-[#121212] border border-neutral-800/80 p-4 rounded-2xl relative overflow-hidden">
+                <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Alumnos / Cupos</p>
+                <p class="text-2xl sm:text-3xl font-extrabold text-neutral-300 mt-1">Activo</p>
+            </div>
+        </section>
+
+        <!-- CALENDAR VIEW SECTION -->
+        <section id="calendarViewContainer" class="space-y-4">
+            <!-- Calendar Navigation Header -->
+            <div class="flex items-center justify-between bg-[#121212] border border-neutral-800 p-4 rounded-2xl">
+                <h2 id="calendarMonthTitle" class="text-base sm:text-lg font-bold text-neutral-100 capitalize">Mes y Año</h2>
+                <div class="flex items-center space-x-2">
+                    <button onclick="changeMonth(-1)" class="p-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 transition">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="goToCurrentMonth()" class="px-3 py-2 text-xs font-semibold rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 transition">
+                        Hoy
+                    </button>
+                    <button onclick="changeMonth(1)" class="p-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-300 hover:bg-neutral-800 transition">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="bg-[#121212] border border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+                <!-- Days of week header -->
+                <div class="grid grid-cols-7 border-b border-neutral-800 bg-neutral-900/55 text-center text-xs font-bold text-neutral-400 py-3">
+                    <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                </div>
+                <!-- Days Matrix -->
+                <div id="calendarDaysGrid" class="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-neutral-800/60 bg-neutral-900/20">
+                    <!-- Javascript injected days -->
+                </div>
+            </div>
+        </section>
+
+        <!-- LIST VIEW SECTION (hidden by default unless toggled) -->
+        <section id="listViewContainer" class="space-y-4 hidden">
+            <!-- Filters & Search Bar -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#121212] p-3 rounded-2xl border border-neutral-800">
+                <div class="flex items-center space-x-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+                    <button onclick="setFilter('all')" id="filterAll" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition text-neutral-950 bg-sand-400">
+                        Todos
+                    </button>
+                    <button onclick="setFilter('hyrox')" id="filterHyrox" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition text-neutral-400 hover:text-white">
+                        Hyrox
+                    </button>
+                    <button onclick="setFilter('crossfit')" id="filterCrossfit" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition text-neutral-400 hover:text-white">
+                        CrossFit
+                    </button>
+                </div>
+
+                <div class="relative flex-1 sm:max-w-xs">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"></i>
+                    <input type="text" id="searchInput" oninput="renderListView()" placeholder="Buscar clase o WOD..." class="w-full bg-neutral-900 text-neutral-100 placeholder-neutral-600 text-xs rounded-xl pl-9 pr-4 py-2 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                </div>
+            </div>
+
+            <!-- WOD Card List -->
+            <div id="wodList" class="space-y-4"></div>
+        </section>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12 px-4 bg-[#121212] border border-dashed border-neutral-800 rounded-3xl">
+            <div class="inline-flex p-4 rounded-full bg-neutral-900 text-neutral-400 mb-3">
+                <i data-lucide="calendar-off" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-base font-bold text-neutral-200">No hay WODs programados en esta fecha</h3>
+            <p class="text-xs text-neutral-400 mt-1 max-w-sm mx-auto">Selecciona una fecha o haz clic en programar WOD para añadir clases para tus alumnos.</p>
+            <button onclick="openWodModal()" class="mt-4 bg-neutral-900 hover:bg-neutral-800 text-sand-300 font-semibold text-xs px-4 py-2 rounded-xl border border-neutral-800 transition">
+                + Añadir WOD para Alumnos
+            </button>
+        </div>
+    </main>
+
+    <!-- Modal Form (Create / Edit WOD) -->
+    <div id="wodModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-[#121212] border border-neutral-800 rounded-3xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="modalContainer">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/60">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="clipboard-list" class="w-5 h-5 text-sand-400"></i>
+                    <h2 id="modalTitle" class="text-lg font-bold text-neutral-100">Programar Clase / WOD</h2>
+                </div>
+                <button onclick="closeWodModal()" class="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Body -->
+            <form id="wodForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-1">
+                <input type="hidden" id="wodId">
+
+                <!-- Type Selector -->
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 mb-1.5 uppercase tracking-wider">Disciplina / Programa</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="typeHyroxBtn" onclick="selectType('hyrox')" class="py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-sand-500/50 bg-sand-500/10 text-sand-300">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
+                            <span>HYROX</span>
+                        </button>
+                        <button type="button" id="typeCrossfitBtn" onclick="selectType('crossfit')" class="py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white">
+                            <i data-lucide="flame" class="w-4 h-4"></i>
+                            <span>CROSSFIT</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Title & Date -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-neutral-400 mb-1">Nombre de la Clase / WOD *</label>
+                        <input type="text" id="wodTitle" required placeholder="Ej. Clase Mañana 08:00 - Murph Prep..." class="w-full bg-neutral-900 text-neutral-100 placeholder-neutral-600 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-400 mb-1">Fecha de Clase *</label>
+                        <input type="date" id="wodDate" required class="w-full bg-neutral-900 text-neutral-100 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                    </div>
+                </div>
+
+                <!-- Modality & Level -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-400 mb-1">Tipo de Entrenamiento</label>
+                        <select id="wodModality" class="w-full bg-neutral-900 text-neutral-100 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                            <option value="For Time">For Time</option>
+                            <option value="AMRAP">AMRAP</option>
+                            <option value="EMOM">EMOM</option>
+                            <option value="Tabata">Tabata</option>
+                            <option value="Chipper">Chipper</option>
+                            <option value="Hyrox Simulation">Hyrox Simulation</option>
+                            <option value="Strength / Fuerza">Strength / Fuerza</option>
+                            <option value="Clase General / Técnica">Clase General / Técnica</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-neutral-400 mb-1">Enfoque / Dificultad</label>
+                        <select id="wodLevel" class="w-full bg-neutral-900 text-neutral-100 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                            <option value="Rx / Todos los niveles">Rx / General</option>
+                            <option value="Scaled / Adaptado">Scaled / Principiantes</option>
+                            <option value="Competidores / Elite">Competidores / Elite</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Quick Hyrox Preset Helper -->
+                <div id="hyroxQuickPresets" class="p-3 bg-neutral-900/60 rounded-2xl border border-sand-500/20 space-y-2">
+                    <p class="text-xs font-semibold text-sand-300 flex items-center space-x-1">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        <span>Estaciones rápidas Hyrox para alumnos</span>
+                    </p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="appendPreset('1000m SkiErg')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ SkiErg</button>
+                        <button type="button" onclick="appendPreset('50m Sled Push')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Sled Push</button>
+                        <button type="button" onclick="appendPreset('50m Sled Pull')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Sled Pull</button>
+                        <button type="button" onclick="appendPreset('80m Burpee Broad Jumps')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Burpee Jump</button>
+                        <button type="button" onclick="appendPreset('1000m Row')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Row</button>
+                        <button type="button" onclick="appendPreset('200m Farmers Carry')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Farmers</button>
+                        <button type="button" onclick="appendPreset('100 Wall Balls')" class="text-[10px] bg-neutral-900 hover:bg-neutral-800 text-neutral-300 px-2.5 py-1 rounded-lg border border-neutral-800 transition">+ Wall Balls</button>
+                    </div>
+                </div>
+
+                <!-- Exercises & Description -->
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 mb-1">Estructura del WOD & Calentamiento *</label>
+                    <textarea id="wodDetails" rows="4" required placeholder="Ej:&#10;Warmup: 5 min movilidad articular&#10;&#10;WOD (Time cap: 25 min):&#10;- 4 Rondas de 1000m Run + 50 Wall Balls" class="w-full bg-neutral-900 text-neutral-100 placeholder-neutral-600 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition font-mono"></textarea>
+                </div>
+
+                <!-- Coach Notes -->
+                <div>
+                    <label class="block text-xs font-semibold text-neutral-400 mb-1">Notas para el Coach / Estímulo</label>
+                    <input type="text" id="wodNotes" placeholder="Ej: Estimular ritmo aeróbico constante. Cuidar técnica en Sled." class="w-full bg-neutral-900 text-neutral-100 placeholder-neutral-600 text-xs rounded-xl p-3 border border-neutral-800 focus:outline-none focus:border-sand-500 transition">
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 flex items-center justify-end space-x-3 border-t border-neutral-800">
+                    <button type="button" onclick="closeWodModal()" class="px-4 py-2.5 rounded-xl border border-neutral-800 text-xs font-semibold text-neutral-400 hover:bg-neutral-900 hover:text-white transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-sand-500 hover:bg-sand-400 text-neutral-950 font-bold text-xs shadow-md transition">
+                        Guardar WOD
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TIMER MODAL (CRONÓMETRO WOD PROFESIONAL) -->
+    <div id="timerModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-[#121212] border border-neutral-800 rounded-3xl w-full max-w-2xl flex flex-col shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="timerModalContainer">
+            
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-neutral-800 flex items-center justify-between bg-neutral-900/60">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="timer" class="w-5 h-5 text-sand-400"></i>
+                    <h2 class="text-lg font-bold text-neutral-100">Cronómetro Profesional WOD</h2>
+                </div>
+                <button onclick="closeTimerModal()" class="text-neutral-400 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800 transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Timer Body -->
+            <div class="p-6 space-y-6 flex flex-col items-center">
+                
+                <!-- Mode Selector -->
+                <div class="flex flex-wrap justify-center gap-1.5 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800 w-full">
+                    <button onclick="setTimerMode('fortime')" id="tBtnFortime" class="px-3.5 py-2 text-xs font-bold rounded-xl transition bg-sand-500 text-neutral-950 shadow-sm">For Time (Cronómetro)</button>
+                    <button onclick="setTimerMode('amrap')" id="tBtnAmrap" class="px-3.5 py-2 text-xs font-bold rounded-xl transition text-neutral-400 hover:text-white">AMRAP</button>
+                    <button onclick="setTimerMode('emom')" id="tBtnEmom" class="px-3.5 py-2 text-xs font-bold rounded-xl transition text-neutral-400 hover:text-white">EMOM</button>
+                    <button onclick="setTimerMode('tabata')" id="tBtnTabata" class="px-3.5 py-2 text-xs font-bold rounded-xl transition text-neutral-400 hover:text-white">Tabata</button>
+                </div>
+
+                <!-- Custom Parameters Config (AMRAP / EMOM / TABATA) -->
+                <div id="timerConfigBox" class="w-full bg-neutral-950/60 border border-neutral-800 rounded-2xl p-4 hidden grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div id="cfgMinutesGroup">
+                        <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Duración (Minutos)</label>
+                        <input type="number" id="cfgMinutes" value="12" min="1" max="99" class="w-full bg-neutral-900 text-neutral-100 font-bold text-center text-sm rounded-xl py-2 border border-neutral-800 focus:outline-none focus:border-sand-500">
+                    </div>
+                    <div id="cfgEmomEveryGroup" class="hidden">
+                        <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Cada (Min)</label>
+                        <input type="number" id="cfgEmomInterval" value="1" min="1" max="10" class="w-full bg-neutral-900 text-neutral-100 font-bold text-center text-sm rounded-xl py-2 border border-neutral-800 focus:outline-none focus:border-sand-500">
+                    </div>
+                    <div id="cfgTabataWorkGroup" class="hidden">
+                        <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Trabajo (Seg)</label>
+                        <input type="number" id="cfgTabataWork" value="20" min="5" max="120" class="w-full bg-neutral-900 text-neutral-100 font-bold text-center text-sm rounded-xl py-2 border border-neutral-800 focus:outline-none focus:border-sand-500">
+                    </div>
+                    <div id="cfgTabataRestGroup" class="hidden">
+                        <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Descanso (Seg)</label>
+                        <input type="number" id="cfgTabataRest" value="10" min="0" max="60" class="w-full bg-neutral-900 text-neutral-100 font-bold text-center text-sm rounded-xl py-2 border border-neutral-800 focus:outline-none focus:border-sand-500">
+                    </div>
+                    <div id="cfgTabataRoundsGroup" class="hidden col-span-2 sm:col-span-1">
+                        <label class="block text-[11px] font-semibold text-neutral-400 mb-1">Rondas Tabata</label>
+                        <input type="number" id="cfgTabataRounds" value="8" min="1" max="50" class="w-full bg-neutral-900 text-neutral-100 font-bold text-center text-sm rounded-xl py-2 border border-neutral-800 focus:outline-none focus:border-sand-500">
+                    </div>
+                </div>
+
+                <!-- Big Countdown / Stopwatch Display -->
+                <div class="w-full bg-black/80 border border-neutral-800 rounded-3xl p-6 text-center relative overflow-hidden shadow-inner">
+                    <div id="timerSubStatus" class="text-xs font-extrabold uppercase tracking-widest text-sand-400 mb-1">Listo para iniciar</div>
+                    <div id="timerDisplay" class="text-6xl sm:text-7xl font-black text-neutral-100 font-mono tracking-tighter my-2">00:00</div>
+                    <div id="timerExtraInfo" class="text-xs text-neutral-400 font-medium">Pulsa Iniciar para comenzar el WOD</div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center justify-center space-x-3 w-full">
+                    <button onclick="resetTimer()" class="px-5 py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs flex items-center space-x-2 transition">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Reiniciar</span>
+                    </button>
+                    <button id="timerMainBtn" onclick="toggleTimerState()" class="flex-1 max-w-xs py-3.5 rounded-xl bg-sand-500 hover:bg-sand-400 text-neutral-950 font-black text-sm flex items-center justify-center space-x-2 shadow-lg transition active:scale-95">
+                        <i data-lucide="play" class="w-4 h-4 stroke-[3]"></i>
+                        <span id="timerMainBtnText">INICIAR WOD</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Initial dataset with sample class WODs
+        let wods = JSON.parse(localStorage.getItem('wod_coach_calendar_data')) || [
+            {
+                id: '1',
+                type: 'hyrox',
+                title: 'Clase Hyrox Simulation (Estaciones)',
+                date: new Date().toISOString().split('T')[0],
+                modality: 'Hyrox Simulation',
+                level: 'Rx / Todos los niveles',
+                details: 'Warmup general 10 min\n\nCircuito x 4 Rondas:\n- 1000m SkiErg\n- 50m Sled Push (125kg)\n- 100 Wall Balls',
+                notes: 'Enfocarse en transición rápida entre estaciones.'
+            },
+            {
+                id: '2',
+                type: 'crossfit',
+                title: 'WOD CrossFit: Fran Benchmark',
+                date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                modality: 'For Time',
+                level: 'Competidores / Elite',
+                details: '21-15-9 Reps por tiempo:\n- Thrusters (43/30 kg)\n- Pull-ups (Dominadas)',
+                notes: 'Exigir estándar completo de extensión de brazos.'
+            }
+        ];
+
+        let currentView = 'calendar'; // 'calendar' or 'list'
+        let currentFilter = 'all';
+        let currentFormType = 'hyrox';
+        let calendarDate = new Date(); // Active viewing month for calendar
+
+        // Timer Variables
+        let timerMode = 'fortime'; // 'fortime', 'amrap', 'emom', 'tabata'
+        let timerState = 'stopped'; // 'stopped', 'running', 'paused'
+        let timerInterval = null;
+        let timerSecondsElapsed = 0;
+        let timerSecondsRemaining = 0;
+        let timerTotalDuration = 0;
+        let tabataPhase = 'work'; // 'work', 'rest'
+        let tabataCurrentRound = 1;
+
+        window.onload = function() {
+            lucide.createIcons();
+            document.getElementById('wodDate').value = new Date().toISOString().split('T')[0];
+            updateStats();
+            renderCalendar();
+            renderListView();
+        };
+
+        function saveData() {
+            localStorage.setItem('wod_coach_calendar_data', JSON.stringify(wods));
+            updateStats();
+            renderCalendar();
+            renderListView();
+        }
+
+        function updateStats() {
+            document.getElementById('statTotalWods').innerText = wods.length;
+            document.getElementById('statHyroxWods').innerText = wods.filter(w => w.type === 'hyrox').length;
+            document.getElementById('statCrossfitWods').innerText = wods.filter(w => w.type === 'crossfit').length;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            const calCont = document.getElementById('calendarViewContainer');
+            const listCont = document.getElementById('listViewContainer');
+            const btnCal = document.getElementById('btnViewCalendar');
+            const btnList = document.getElementById('btnViewList');
+
+            if (view === 'calendar') {
+                calCont.classList.remove('hidden');
+                listCont.classList.add('hidden');
+                btnCal.className = 'px-3 py-2 text-xs font-semibold rounded-xl border border-sand-500/40 bg-sand-500/10 text-sand-300 transition flex items-center space-x-1.5';
+                btnList.className = 'px-3 py-2 text-xs font-semibold rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white transition flex items-center space-x-1.5';
+                renderCalendar();
+            } else {
+                calCont.classList.add('hidden');
+                listCont.classList.remove('hidden');
+                btnList.className = 'px-3 py-2 text-xs font-semibold rounded-xl border border-sand-500/40 bg-sand-500/10 text-sand-300 transition flex items-center space-x-1.5';
+                btnCal.className = 'px-3 py-2 text-xs font-semibold rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white transition flex items-center space-x-1.5';
+                renderListView();
+            }
+        }
+
+        // Calendar Navigation & Rendering
+        function changeMonth(direction) {
+            calendarDate.setMonth(calendarDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function goToCurrentMonth() {
+            calendarDate = new Date();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = calendarDate.getFullYear();
+            const month = calendarDate.getMonth();
+
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            document.getElementById('calendarMonthTitle').innerText = `${monthNames[month]} ${year}`;
+
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+
+            // First day of month index (0 = Sunday, 1 = Monday, etc.)
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            // Adjust so Monday is first day of grid (0 = Mon, 6 = Sun)
+            const startingSpace = (firstDayIndex === 0) ? 6 : firstDayIndex - 1;
+
+            const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Empty cells before start of month
+            for (let i = 0; i < startingSpace; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'min-h-[100px] bg-neutral-950/40 opacity-30';
+                grid.appendChild(emptyCell);
+            }
+
+            // Days of the month
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                const dateString = `${year}-${monthStr}-${dayStr}`;
+
+                const dayWods = wods.filter(w => w.date === dateString);
+                const isToday = dateString === todayStr;
+
+                const cell = document.createElement('div');
+                cell.className = `min-h-[110px] p-2 flex flex-col justify-between transition hover:bg-neutral-900/60 relative group ${isToday ? 'bg-sand-500/5 ring-1 ring-sand-500/30' : ''}`;
+                
+                // Day Header inside cell
+                let htmlContent = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold ${isToday ? 'bg-sand-500 text-neutral-950 w-5 h-5 rounded-full flex items-center justify-center' : 'text-neutral-400'}">${day}</span>
+                        <button onclick="openWodModalWithDate('${dateString}')" class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-neutral-800 text-neutral-400 hover:text-white transition" title="Añadir WOD este día">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-1 overflow-y-auto max-h-[85px]">
+                `;
+
+                dayWods.forEach(wod => {
+                    const isHyrox = wod.type === 'hyrox';
+                    const badgeBg = isHyrox ? 'bg-sand-500/20 text-sand-300 border-sand-500/30' : 'bg-neutral-800 text-white border-neutral-700';
+                    
+                    htmlContent += `
+                        <div onclick="editWod('${wod.id}')" class="text-[10px] p-1.5 rounded-lg border ${badgeBg} cursor-pointer truncate font-medium hover:scale-[1.02] transition shadow-xs" title="${wod.title}">
+                            <span class="font-bold">${isHyrox ? '⚡' : '🔥'}</span> ${wod.title}
+                        </div>
+                    `;
+                });
+
+                htmlContent += `</div>`;
+                cell.innerHTML = htmlContent;
+                grid.appendChild(cell);
+            }
+
+            lucide.createIcons();
+        }
+
+        // List View Rendering
+        function setFilter(filter) {
+            currentFilter = filter;
+            const btnAll = document.getElementById('filterAll');
+            const btnHyrox = document.getElementById('filterHyrox');
+            const btnCrossfit = document.getElementById('filterCrossfit');
+
+            const activeClass = 'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition text-neutral-950 bg-sand-400';
+            const inactiveClass = 'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition text-neutral-400 hover:text-white';
+
+            btnAll.className = filter === 'all' ? activeClass : inactiveClass;
+            btnHyrox.className = filter === 'hyrox' ? activeClass : inactiveClass;
+            btnCrossfit.className = filter === 'crossfit' ? activeClass : inactiveClass;
+
+            renderListView();
+        }
+
+        function renderListView() {
+            const listContainer = document.getElementById('wodList');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = wods.filter(wod => {
+                const matchesFilter = currentFilter === 'all' || wod.type === currentFilter;
+                const matchesSearch = wod.title.toLowerCase().includes(searchVal) || 
+                                      wod.details.toLowerCase().includes(searchVal) ||
+                                      wod.modality.toLowerCase().includes(searchVal);
+                return matchesFilter && matchesSearch;
+            });
+
+            filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-12 px-4 bg-[#121212] border border-dashed border-neutral-800 rounded-3xl">
+                        <div class="inline-flex p-4 rounded-full bg-neutral-900 text-neutral-400 mb-3">
+                            <i data-lucide="clipboard-x" class="w-8 h-8"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-neutral-200">No se encontraron WODs o clases</h3>
+                        <p class="text-xs text-neutral-400 mt-1">Prueba cambiando los filtros de búsqueda.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(wod => {
+                const isHyrox = wod.type === 'hyrox';
+                const badgeColor = isHyrox ? 'bg-sand-500/10 text-sand-300 border-sand-500/30' : 'bg-neutral-800 text-neutral-200 border-neutral-700';
+
+                return `
+                <div class="bg-[#121212] border border-neutral-800/80 hover:border-neutral-700 rounded-2xl p-5 transition shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center space-x-3">
+                            <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wider uppercase border ${badgeColor} flex items-center gap-1">
+                                <i data-lucide="${isHyrox ? 'zap' : 'flame'}" class="w-3 h-3"></i>
+                                ${wod.type}
+                            </span>
+                            <h3 class="font-bold text-base text-neutral-100">${wod.title}</h3>
+                        </div>
+                        <div class="flex items-center space-x-2 text-xs text-neutral-400">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-sand-400"></i>
+                            <span>${formatDate(wod.date)}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 mb-3">
+                        <div class="bg-neutral-900 px-3 py-1.5 rounded-xl border border-neutral-800 text-xs text-neutral-300">
+                            Modalidad: <span class="font-semibold text-white">${wod.modality}</span>
+                        </div>
+                        <div class="bg-neutral-900 px-3 py-1.5 rounded-xl border border-neutral-800 text-xs text-neutral-300">
+                            Nivel: <span class="font-semibold text-white">${wod.level}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-neutral-950/80 rounded-xl p-3 border border-neutral-800/80 mb-3 text-xs text-neutral-300 font-mono whitespace-pre-line leading-relaxed">
+                        ${wod.details}
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2 border-t border-neutral-800 text-xs">
+                        <div class="text-neutral-400 italic text-[11px] truncate max-w-[70%]">
+                            ${wod.notes ? `<span class="not-italic">💬</span> ${wod.notes}` : ''}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="editWod('${wod.id}')" class="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition" title="Editar">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="deleteWod('${wod.id}')" class="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition" title="Eliminar">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function selectType(type) {
+            currentFormType = type;
+            const btnHyrox = document.getElementById('typeHyroxBtn');
+            const btnCrossfit = document.getElementById('typeCrossfitBtn');
+            const presets = document.getElementById('hyroxQuickPresets');
+
+            if (type === 'hyrox') {
+                btnHyrox.className = 'py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-sand-500/50 bg-sand-500/10 text-sand-300';
+                btnCrossfit.className = 'py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white';
+                presets.classList.remove('hidden');
+            } else {
+                btnCrossfit.className = 'py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-neutral-700 bg-neutral-800 text-white';
+                btnHyrox.className = 'py-2.5 px-4 rounded-xl border font-bold text-xs flex items-center justify-center space-x-2 transition border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white';
+                presets.classList.add('hidden');
+            }
+        }
+
+        function appendPreset(text) {
+            const textarea = document.getElementById('wodDetails');
+            textarea.value = textarea.value.trim() !== '' ? textarea.value + '\n- ' + text : '- ' + text;
+        }
+
+        function openWodModal() {
+            document.getElementById('wodForm').reset();
+            document.getElementById('wodId').value = '';
+            document.getElementById('modalTitle').innerText = 'Programar Clase / WOD';
+            document.getElementById('wodDate').value = new Date().toISOString().split('T')[0];
+            selectType('hyrox');
+
+            const modal = document.getElementById('wodModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function openWodModalWithDate(dateStr) {
+            openWodModal();
+            document.getElementById('wodDate').value = dateStr;
+        }
+
+        function closeWodModal() {
+            const modal = document.getElementById('wodModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const id = document.getElementById('wodId').value;
+            const wodData = {
+                id: id || Date.now().toString(),
+                type: currentFormType,
+                title: document.getElementById('wodTitle').value,
+                date: document.getElementById('wodDate').value,
+                modality: document.getElementById('wodModality').value,
+                level: document.getElementById('wodLevel').value,
+                details: document.getElementById('wodDetails').value,
+                notes: document.getElementById('wodNotes').value
+            };
+
+            if (id) {
+                const index = wods.findIndex(w => w.id === id);
+                if (index !== -1) wods[index] = wodData;
+            } else {
+                wods.push(wodData);
+            }
+
+            saveData();
+            closeWodModal();
+        }
+
+        function editWod(id) {
+            const wod = wods.find(w => w.id === id);
+            if (!wod) return;
+
+            document.getElementById('wodId').value = wod.id;
+            document.getElementById('wodTitle').value = wod.title;
+            document.getElementById('wodDate').value = wod.date;
+            document.getElementById('wodModality').value = wod.modality;
+            document.getElementById('wodLevel').value = wod.level;
+            document.getElementById('wodDetails').value = wod.details;
+            document.getElementById('wodNotes').value = wod.notes || '';
+
+            selectType(wod.type);
+            document.getElementById('modalTitle').innerText = 'Editar WOD / Clase';
+
+            const modal = document.getElementById('wodModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function deleteWod(id) {
+            wods = wods.filter(w => w.id !== id);
+            saveData();
+        }
+
+        // --- TIMER LOGIC & FUNCTIONS ---
+        function openTimerModal() {
+            const modal = document.getElementById('timerModal');
+            const container = document.getElementById('timerModalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                container.classList.remove('scale-95');
+            }, 10);
+            resetTimer();
+        }
+
+        function closeTimerModal() {
+            pauseTimer();
+            const modal = document.getElementById('timerModal');
+            const container = document.getElementById('timerModalContainer');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 200);
+        }
+
+        function setTimerMode(mode) {
+            pauseTimer();
+            timerMode = mode;
+
+            // Highlight buttons
+            const modes = ['fortime', 'amrap', 'emom', 'tabata'];
+            modes.forEach(m => {
+                const btn = document.getElementById(`tBtn${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                if (btn) {
+                    if (m === mode) {
+                        btn.className = 'px-3.5 py-2 text-xs font-bold rounded-xl transition bg-sand-500 text-neutral-950 shadow-sm';
+                    } else {
+                        btn.className = 'px-3.5 py-2 text-xs font-bold rounded-xl transition text-neutral-400 hover:text-white';
+                    }
+                }
+            });
+
+            const configBox = document.getElementById('timerConfigBox');
+            const minGroup = document.getElementById('cfgMinutesGroup');
+            const emomGroup = document.getElementById('cfgEmomEveryGroup');
+            const workGroup = document.getElementById('cfgTabataWorkGroup');
+            const restGroup = document.getElementById('cfgTabataRestGroup');
+            const roundsGroup = document.getElementById('cfgTabataRoundsGroup');
+
+            // Reset visibility
+            configBox.classList.remove('hidden');
+            minGroup.classList.add('hidden');
+            emomGroup.classList.add('hidden');
+            workGroup.classList.add('hidden');
+            restGroup.classList.add('hidden');
+            roundsGroup.classList.add('hidden');
+
+            if (mode === 'fortime') {
+                configBox.classList.add('hidden');
+            } else if (mode === 'amrap') {
+                minGroup.classList.remove('hidden');
+                document.getElementById('cfgMinutes').value = 15;
+            } else if (mode === 'emom') {
+                minGroup.classList.remove('hidden');
+                emomGroup.classList.remove('hidden');
+                document.getElementById('cfgMinutes').value = 20;
+                document.getElementById('cfgEmomInterval').value = 1;
+            } else if (mode === 'tabata') {
+                workGroup.classList.remove('hidden');
+                restGroup.classList.remove('hidden');
+                roundsGroup.classList.remove('hidden');
+            }
+
+            resetTimer();
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerState = 'stopped';
+            document.getElementById('timerMainBtnText').innerText = 'INICIAR WOD';
+            document.getElementById('timerMainBtn').className = 'flex-1 max-w-xs py-3.5 rounded-xl bg-sand-500 hover:bg-sand-400 text-neutral-950 font-black text-sm flex items-center justify-center space-x-2 shadow-lg transition active:scale-95';
+
+            if (timerMode === 'fortime') {
+                timerSecondsElapsed = 0;
+                document.getElementById('timerDisplay').innerText = '00:00';
+                document.getElementById('timerSubStatus').innerText = 'For Time - Cronómetro Progresivo';
+                document.getElementById('timerExtraInfo').innerText = 'El tiempo corre hacia adelante';
+            } else if (timerMode === 'amrap') {
+                const mins = parseInt(document.getElementById('cfgMinutes').value) || 12;
+                timerSecondsRemaining = mins * 60;
+                document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                document.getElementById('timerSubStatus').innerText = `AMRAP ${mins} Minutos`;
+                document.getElementById('timerExtraInfo').innerText = 'Cuenta regresiva hasta finalizar';
+            } else if (timerMode === 'emom') {
+                const mins = parseInt(document.getElementById('cfgMinutes').value) || 20;
+                timerSecondsRemaining = mins * 60;
+                timerTotalDuration = timerSecondsRemaining;
+                document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                document.getElementById('timerSubStatus').innerText = `EMOM ${mins} Min`;
+                document.getElementById('timerExtraInfo').innerText = 'Alerta cada minuto';
+            } else if (timerMode === 'tabata') {
+                const work = parseInt(document.getElementById('cfgTabataWork').value) || 20;
+                tabataPhase = 'work';
+                tabataCurrentRound = 1;
+                timerSecondsRemaining = work;
+                document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                document.getElementById('timerSubStatus').innerText = 'TABATA - TRABAJO (Ronda 1)';
+                document.getElementById('timerExtraInfo').innerText = 'Prepárate para dar el máximo';
+            }
+        }
+
+        function toggleTimerState() {
+            if (timerState === 'stopped' || timerState === 'paused') {
+                startTimer();
+            } else {
+                pauseTimer();
+            }
+        }
+
+        function startTimer() {
+            timerState = 'running';
+            document.getElementById('timerMainBtnText').innerText = 'PAUSAR';
+            document.getElementById('timerMainBtn').className = 'flex-1 max-w-xs py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-sm flex items-center justify-center space-x-2 shadow-lg transition active:scale-95';
+
+            // If starting from scratch on AMRAP or EMOM and input changed, grab values
+            if (timerMode === 'amrap' && timerSecondsRemaining <= 0) {
+                const mins = parseInt(document.getElementById('cfgMinutes').value) || 12;
+                timerSecondsRemaining = mins * 60;
+            }
+
+            timerInterval = setInterval(() => {
+                if (timerMode === 'fortime') {
+                    timerSecondsElapsed++;
+                    document.getElementById('timerDisplay').innerText = formatTime(timerSecondsElapsed);
+                } else if (timerMode === 'amrap') {
+                    if (timerSecondsRemaining > 0) {
+                        timerSecondsRemaining--;
+                        document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                    } else {
+                        pauseTimer();
+                        document.getElementById('timerSubStatus').innerText = '¡TIEMPO FINALIZADO (TIME UP)!';
+                        playBeepSound(800, 800);
+                    }
+                } else if (timerMode === 'emom') {
+                    if (timerSecondsRemaining > 0) {
+                        timerSecondsRemaining--;
+                        document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                        
+                        // Every minute check
+                        const intervalSec = (parseInt(document.getElementById('cfgEmomInterval').value) || 1) * 60;
+                        if (timerSecondsRemaining % intervalSec === 0 && timerSecondsRemaining > 0) {
+                            playBeepSound(600, 400);
+                            document.getElementById('timerSubStatus').innerText = '⚡ ¡NUEVA RONDA EMOM! ⚡';
+                        } else if (timerSecondsRemaining <= 5 && timerSecondsRemaining > 0) {
+                            playBeepSound(400, 150);
+                        }
+                    } else {
+                        pauseTimer();
+                        document.getElementById('timerSubStatus').innerText = '¡EMOM COMPLETADO!';
+                        playBeepSound(900, 1000);
+                    }
+                } else if (timerMode === 'tabata') {
+                    if (timerSecondsRemaining > 1) {
+                        timerSecondsRemaining--;
+                        document.getElementById('timerDisplay').innerText = formatTime(timerSecondsRemaining);
+                        if (timerSecondsRemaining <= 3 && tabataPhase === 'work') {
+                            playBeepSound(500, 100);
+                        }
+                    } else {
+                        // Switch phase or round
+                        const workSec = parseInt(document.getElementById('cfgTabataWork').value) || 20;
+                        const restSec = parseInt(document.getElementById('cfgTabataRest').value) || 10;
+                        const totalRounds = parseInt(document.getElementById('cfgTabataRounds').value) || 8;
+
+                        if (tabataPhase === 'work') {
+                            if (restSec > 0) {
+                                tabataPhase = 'rest';
+                                timerSecondsRemaining = restSec;
+                                document.getElementById('timerSubStatus').innerText = `TABATA - DESCANSO (Ronda ${tabataCurrentRound}/${totalRounds})`;
+                                playBeepSound(300, 500);
+                            } else {
+                                // Skip rest if 0
+                                advanceTabataRound(totalRounds, workSec);
+                            }
+                        } else {
+                            advanceTabataRound(totalRounds, workSec);
+                        }
+                    }
+                }
+            }, 1000);
+        }
+
+        function advanceTabataRound(totalRounds, workSec) {
+            if (tabataCurrentRound < totalRounds) {
+                tabataCurrentRound++;
+                tabataPhase = 'work';
+                timerSecondsRemaining = workSec;
+                document.getElementById('timerSubStatus').innerText = `TABATA - TRABAJO (Ronda ${tabataCurrentRound}/${totalRounds})`;
+                playBeepSound(700, 600);
+            } else {
+                pauseTimer();
+                document.getElementById('timerSubStatus').innerText = '¡TABATA COMPLETADO! 🏆';
+                playBeepSound(1000, 1200);
+            }
+        }
+
+        function pauseTimer() {
+            timerState = 'paused';
+            clearInterval(timerInterval);
+            document.getElementById('timerMainBtnText').innerText = 'REANUDAR';
+            document.getElementById('timerMainBtn').className = 'flex-1 max-w-xs py-3.5 rounded-xl bg-sand-500 hover:bg-sand-400 text-neutral-950 font-black text-sm flex items-center justify-center space-x-2 shadow-lg transition active:scale-95';
+        }
+
+        function formatTime(totalSeconds) {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+        }
+
+        // Web Audio API beep sound generator (No external URLs required)
+        function playBeepSound(frequency = 440, duration = 200) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, duration);
+            } catch (e) {
+                console.log('Audio Context restricted', e);
+            }
+        }
+    </script>
+</body>
+</html>
